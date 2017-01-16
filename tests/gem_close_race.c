@@ -178,7 +178,9 @@ static void threads(int timeout)
 
 	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
+#ifndef __FreeBSD__
 	sev.sigev_notify_thread_id = gettid();
+#endif
 	sev.sigev_signo = SIGRTMIN;
 	igt_assert(timer_create(CLOCK_MONOTONIC, &sev, &timer) == 0);
 

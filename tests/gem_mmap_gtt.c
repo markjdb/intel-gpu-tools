@@ -96,12 +96,22 @@ test_access(int fd)
 	mmap_arg.handle = handle;
 	do_ioctl(fd, DRM_IOCTL_I915_GEM_MMAP_GTT, &mmap_arg);
 
+#ifndef __FreeBSD__
 	igt_assert(mmap64(0, OBJECT_SIZE, PROT_READ | PROT_WRITE,
 			  MAP_SHARED, fd, mmap_arg.offset));
+#else
+	igt_assert(mmap(0, OBJECT_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED, fd, mmap_arg.offset));
+#endif
 
 	/* Check that the same offset on the other fd doesn't work. */
+#ifndef __FreeBSD__
 	igt_assert(mmap64(0, OBJECT_SIZE, PROT_READ | PROT_WRITE,
 			  MAP_SHARED, fd2, mmap_arg.offset) == MAP_FAILED);
+#else
+	igt_assert(mmap(0, OBJECT_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED, fd2, mmap_arg.offset) == MAP_FAILED);
+#endif
 	igt_assert(errno == EACCES);
 
 	flink = gem_flink(fd, handle);
@@ -111,8 +121,13 @@ test_access(int fd)
 
 	/* Recheck that it works after flink. */
 	/* Check that the same offset on the other fd doesn't work. */
+#ifndef __FreeBSD__
 	igt_assert(mmap64(0, OBJECT_SIZE, PROT_READ | PROT_WRITE,
 			  MAP_SHARED, fd2, mmap_arg.offset));
+#else
+	igt_assert(mmap(0, OBJECT_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED, fd2, mmap_arg.offset));
+#endif
 }
 
 static void
@@ -128,12 +143,22 @@ test_short(int fd)
 	for (pages = 1; pages <= OBJECT_SIZE / PAGE_SIZE; pages <<= 1) {
 		uint8_t *r, *w;
 
+#ifndef __FreeBSD__
 		w = mmap64(0, pages * PAGE_SIZE, PROT_READ | PROT_WRITE,
 			   MAP_SHARED, fd, mmap_arg.offset);
+#else
+		w = mmap(0, pages * PAGE_SIZE, PROT_READ | PROT_WRITE,
+			 MAP_SHARED, fd, mmap_arg.offset);
+#endif
 		igt_assert(w != MAP_FAILED);
 
+#ifndef __FreeBSD__
 		r = mmap64(0, pages * PAGE_SIZE, PROT_READ,
 			   MAP_SHARED, fd, mmap_arg.offset);
+#else
+		r = mmap(0, pages * PAGE_SIZE, PROT_READ,
+			 MAP_SHARED, fd, mmap_arg.offset);
+#endif
 		igt_assert(r != MAP_FAILED);
 
 		for (p = 0; p < pages; p++) {

@@ -221,7 +221,9 @@ void igt_spin_batch_set_timeout(igt_spin_t *spin, int64_t ns)
 
 	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
+#ifndef __FreeBSD__
 	sev.sigev_notify_thread_id = gettid();
+#endif
 	sev.sigev_signo = spin->signo;
 	igt_assert(timer_create(CLOCK_MONOTONIC, &sev, &timer) == 0);
 	igt_assert(timer);

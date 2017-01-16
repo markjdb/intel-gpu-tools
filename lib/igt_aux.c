@@ -51,7 +51,12 @@
 #include <termios.h>
 #include <assert.h>
 
+#ifndef __FreeBSD__
 #include <proc/readproc.h>
+#else
+#include <sys/param.h>
+#include <dirent.h>
+#endif
 
 #include "drmtest.h"
 #include "i915_drm.h"
@@ -69,6 +74,13 @@
 
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>   /* for dirname() */
+#endif
+
+#ifdef __FreeBSD__
+typedef struct {
+	int tid;
+	const char *cmd;
+} proc_t;
 #endif
 
 /**
@@ -109,7 +121,9 @@ sig_ioctl(int fd, unsigned long request, void *arg)
 	int ret;
 
 	SIG_ASSERT(__igt_sigiter.timer);
+#ifndef __FreeBSD__
 	SIG_ASSERT(__igt_sigiter.tid == gettid());
+#endif
 
 	memset(&its, 0, sizeof(its));
 	if (timer_settime(__igt_sigiter.timer, 0, &its, NULL)) {
@@ -171,11 +185,15 @@ static bool igt_sigiter_start(struct __igt_sigiter *iter, bool enable)
 		struct itimerspec its;
 
 		igt_ioctl = sig_ioctl;
+#ifndef __FreeBSD__
 		__igt_sigiter.tid = gettid();
+#endif
 
 		memset(&sev, 0, sizeof(sev));
 		sev.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
+#ifndef __FreeBSD__
 		sev.sigev_notify_thread_id = __igt_sigiter.tid;
+#endif
 		sev.sigev_signo = SIGRTMIN;
 		igt_assert(timer_create(CLOCK_MONOTONIC, &sev, &__igt_sigiter.timer) == 0);
 
@@ -221,7 +239,9 @@ static bool igt_sigiter_stop(struct __igt_sigiter *iter, bool enable)
 		struct sigaction act;
 
 		SIG_ASSERT(igt_ioctl == sig_ioctl);
+#ifndef __FreeBSD__
 		SIG_ASSERT(__igt_sigiter.tid == gettid());
+#endif
 		igt_ioctl = drmIoctl;
 
 		timer_delete(__igt_sigiter.timer);
@@ -319,10 +339,18 @@ void igt_fork_signal_helper(void)
 	 * and we send the signal at exactly the wrong time).
 	 */
 	signal(SIGCONT, sig_handler);
+#ifndef __FreeBSD__
 	setpgrp(); /* define a new process group for the tests */
+#else
+	setpgid(0, 0);
+#endif
 
 	igt_fork_helper(&signal_helper) {
+#ifndef __FreeBSD__
 		setpgrp(); /* Escape from the test process group */
+#else
+		setpgid(0, 0); /* Escape from the test process group */
+#endif
 
 		/* Pass along the test process group identifier,
 		 * negative pid => send signal to everyone in the group.
@@ -1202,6 +1230,7 @@ void igt_set_module_param_int(const char *name, int val)
  */
 int igt_terminate_process(int sig, const char *comm)
 {
+#ifndef __FreeBSD__
 	PROCTAB *proc;
 	proc_t *proc_info;
 	int err = 0;
@@ -1223,6 +1252,9 @@ int igt_terminate_process(int sig, const char *comm)
 
 	closeproc(proc);
 	return err;
+#else
+	return 1;
+#endif
 }
 
 struct pinfo {
@@ -1365,6 +1397,7 @@ again:
 static void
 __igt_lsof(const char *dir)
 {
+#ifndef __FreeBSD__
 	PROCTAB *proc;
 	proc_t *proc_info;
 
@@ -1405,6 +1438,7 @@ __igt_lsof(const char *dir)
 	}
 
 	closeproc(proc);
+#endif
 }
 
 /**
@@ -1498,7 +1532,9 @@ void igt_start_siglatency(int sig)
 
 	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
+#ifndef __FreeBSD__
 	sev.sigev_notify_thread_id = gettid();
+#endif
 	sev.sigev_signo = sig;
 	timer_create(CLOCK_MONOTONIC, &sev, &igt_siglatency.timer);
 

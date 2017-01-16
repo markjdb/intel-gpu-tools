@@ -28,6 +28,14 @@
 
 #include <signal.h>
 
+#ifdef __FreeBSD__
+#include <fcntl.h>
+
+struct kmod_ctx;
+
+#define	KMOD_REMOVE_FORCE	1
+#endif
+
 /**
  * SECTION:igt_kmod
  * @short_description: Wrappers around libkmod for module loading/unloading
@@ -55,6 +63,7 @@ static void squelch(void *data, int priority,
 
 static struct kmod_ctx *kmod_ctx(void)
 {
+#ifndef __FreeBSD__
 	static struct kmod_ctx *ctx;
 
 	if (!ctx) {
@@ -65,6 +74,9 @@ static struct kmod_ctx *kmod_ctx(void)
 	}
 
 	return ctx;
+#else
+	return (NULL);
+#endif
 }
 
 /**
@@ -80,6 +92,7 @@ static struct kmod_ctx *kmod_ctx(void)
 bool
 igt_kmod_is_loaded(const char *mod_name)
 {
+#ifndef __FreeBSD__
 	struct kmod_ctx *ctx = kmod_ctx();
 	struct kmod_list *mod, *list;
 	bool ret = false;
@@ -101,12 +114,19 @@ igt_kmod_is_loaded(const char *mod_name)
 	kmod_module_unref_list(list);
 out:
 	return ret;
+#else
+	return (false);
+#endif
 }
 
 static int modprobe(struct kmod_module *kmod, const char *options)
 {
+#ifndef __FreeBSD__
 	return kmod_module_probe_insert_module(kmod, 0, options,
 					       NULL, NULL, NULL);
+#else
+	return (1);
+#endif
 }
 
 /**
@@ -127,6 +147,7 @@ static int modprobe(struct kmod_module *kmod, const char *options)
 int
 igt_kmod_load(const char *mod_name, const char *opts)
 {
+#ifndef __FreeBSD__
 	struct kmod_ctx *ctx = kmod_ctx();
 	struct kmod_module *kmod;
 	int err = 0;
@@ -156,6 +177,9 @@ igt_kmod_load(const char *mod_name, const char *opts)
 out:
 	kmod_module_unref(kmod);
 	return -err ? err < 0 : err;
+#else
+	return 1;
+#endif
 }
 
 
@@ -173,6 +197,7 @@ out:
 int
 igt_kmod_unload(const char *mod_name, unsigned int flags)
 {
+#ifndef __FreeBSD__
 	struct kmod_ctx *ctx = kmod_ctx();
 	struct kmod_module *kmod;
 	int err;
@@ -193,6 +218,9 @@ igt_kmod_unload(const char *mod_name, unsigned int flags)
 out:
 	kmod_module_unref(kmod);
 	return -err ? err < 0 : err;
+#else
+	return 1;
+#endif
 }
 
 /**
@@ -203,6 +231,7 @@ out:
 void
 igt_kmod_list_loaded(void)
 {
+#ifndef __FreeBSD__
 	struct kmod_ctx *ctx = kmod_ctx();
 	struct kmod_list *module, *list;
 
@@ -238,6 +267,9 @@ igt_kmod_list_loaded(void)
 	}
 
 	kmod_module_unref_list(list);
+#else
+	igt_info("UNIMPLEMENTED!!\n");
+#endif
 }
 
 /**
@@ -372,6 +404,7 @@ void igt_kselftests(const char *module_name,
 		    const char *result,
 		    const char *filter)
 {
+#ifndef __FreeBSD__
 	const char *param_prefix = "igt__";
 	const int prefix_len = strlen(param_prefix);
 	IGT_LIST(tests);
@@ -472,4 +505,5 @@ void igt_kselftests(const char *module_name,
 
 		igt_require(!igt_list_empty(&tests));
 	}
+#endif
 }

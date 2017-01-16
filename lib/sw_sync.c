@@ -174,7 +174,11 @@ int sync_fence_wait(int fd, int timeout)
 
 			return 0;
 		} else if (ret == 0) {
+#ifndef __FreeBSD__
 			return -ETIME;
+#else
+			return -ETIMEDOUT;
+#endif
 		} else  {
 			ret = -errno;
 			if (ret == -EINTR || ret == -EAGAIN)

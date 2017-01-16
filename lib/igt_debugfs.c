@@ -117,6 +117,7 @@ static bool is_mountpoint(const char *path)
  */
 const char *igt_debugfs_mount(void)
 {
+#ifndef __FreeBSD__
 	struct stat st;
 
 	if (stat("/debug/dri", &st) == 0)
@@ -129,6 +130,9 @@ const char *igt_debugfs_mount(void)
 		   mount("debug", "/sys/kernel/debug", "debugfs", 0, 0) == 0);
 
 	return "/sys/kernel/debug";
+#else
+	return "/debug";
+#endif
 }
 
 static bool __igt_debugfs_init(igt_debugfs_t *debugfs)

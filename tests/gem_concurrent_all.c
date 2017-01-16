@@ -1908,12 +1908,20 @@ igt_main
 						igt_debug("Pinning %lld MiB\n", (long long)pin_sz);
 						pin_sz *= 1024 * 1024;
 
+#ifndef __FreeBSD__
 						if (posix_memalign(&pinned, 4096, pin_sz) ||
 						    mlock(pinned, pin_sz) ||
 						    madvise(pinned, pin_sz, MADV_DONTFORK)) {
 							free(pinned);
 							pinned = NULL;
 						}
+#else
+						if (posix_memalign(&pinned, 4096, pin_sz) ||
+						    mlock(pinned, pin_sz)) {
+							free(pinned);
+							pinned = NULL;
+						}
+#endif
 						igt_require(pinned);
 					}
 

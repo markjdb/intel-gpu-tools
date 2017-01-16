@@ -29,7 +29,9 @@
 
 #include <dirent.h>
 #include <sys/utsname.h>
+#ifndef __FreeBSD__
 #include <linux/limits.h>
+#endif
 #include <signal.h>
 #include <libgen.h>
 #include <signal.h>

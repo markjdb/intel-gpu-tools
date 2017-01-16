@@ -41,6 +41,10 @@
 #include <errno.h>
 #include <time.h>
 
+#ifdef __FreeBSD__
+#include <sys/consio.h>
+#endif
+
 #include <i915_drm.h>
 
 #include "drmtest.h"

@@ -26,6 +26,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifdef __FreeBSD__
+#include <sys/param.h>
+#endif
+
 #define THRESHOLD_PER_CONNECTOR	10
 #define THRESHOLD_TOTAL		50
 #define CHECK_TIMES		15

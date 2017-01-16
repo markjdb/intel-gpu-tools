@@ -1153,6 +1153,7 @@ test_low_oa_exponent_permissions(void)
 static void
 test_per_context_mode_unprivileged(void)
 {
+#ifndef __FreeBSD__
 	uint64_t properties[] = {
 		/* Single context sampling */
 		DRM_I915_PERF_PROP_CTX_HANDLE, UINT64_MAX, /* updated below */
@@ -1202,6 +1203,7 @@ test_per_context_mode_unprivileged(void)
 	}
 
 	igt_waitchildren();
+#endif
 }
 
 static int64_t
@@ -1907,6 +1909,7 @@ emit_stall_timestamp_and_rpc(struct intel_batchbuffer *batch,
 static void
 test_per_ctx_mi_rpc(void)
 {
+#ifndef __FreeBSD__
 	uint64_t properties[] = {
 		DRM_I915_PERF_PROP_CTX_HANDLE, UINT64_MAX, /* updated below */
 
@@ -2116,6 +2119,7 @@ test_per_ctx_mi_rpc(void)
 	}
 
 	igt_waitchildren();
+#endif
 }
 
 static void

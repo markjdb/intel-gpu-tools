@@ -69,6 +69,7 @@ static int __gem_context_create(int fd, uint32_t *ctx_id)
 	return ret;
 }
 
+#ifndef __FreeBSD__
 static int fls(uint64_t x)
 {
 	int t;
@@ -78,6 +79,7 @@ static int fls(uint64_t x)
 
 	return t;
 }
+#endif
 
 static bool allow_unlimited_files(void)
 {

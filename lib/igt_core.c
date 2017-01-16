@@ -559,6 +559,7 @@ static void print_usage(const char *help_str, bool output_on_stderr)
 
 static void oom_adjust_for_doom(void)
 {
+#ifndef __FreeBSD__
 	int fd;
 	const char always_kill[] = "1000";
 
@@ -566,7 +567,7 @@ static void oom_adjust_for_doom(void)
 	igt_assert(fd != -1);
 	igt_assert(write(fd, always_kill, sizeof(always_kill)) == sizeof(always_kill));
 	close(fd);
-
+#endif
 }
 
 static int common_init(int *argc, char **argv,
@@ -1774,7 +1775,11 @@ static void fatal_sig_handler(int sig)
 		pthread_t tid = pthread_self();
 		union sigval value = { .sival_ptr = NULL };
 
+#ifndef __FreeBSD__
 		pthread_sigqueue(tid, sig, value);
+#else
+		pthread_kill(tid, sig);
+#endif
 #endif
         }
 }

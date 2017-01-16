@@ -222,6 +222,9 @@ static void leak(int fd, uint64_t alloc)
 {
 	char *ptr;
 
+#ifdef __FreeBSD__
+#define	MAP_POPULATE 0
+#endif
 	ptr = mmap(NULL, alloc, PROT_READ | PROT_WRITE,
 		   MAP_ANON | MAP_PRIVATE | MAP_POPULATE,
 		   -1, 0);

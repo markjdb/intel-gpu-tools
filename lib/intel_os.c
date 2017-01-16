@@ -102,11 +102,15 @@ intel_get_avail_ram_mb(void)
 	igt_assert(sysinfo(&sysinf) == 0);
 	retval = sysinf.freeram;
 	retval *= sysinf.mem_unit;
-#elif defined(_SC_PAGESIZE) && defined(_SC_AVPHYS_PAGES) /* Solaris */
+#elif defined(_SC_PAGESIZE) && (defined(_SC_AVPHYS_PAGES) || defined(_SC_PHYS_PAGES)) /* Solaris and FreeBSD */
 	long pagesize, npages;
 
 	pagesize = sysconf(_SC_PAGESIZE);
+#ifdef _SC_AVPHYS_PAGES
         npages = sysconf(_SC_AVPHYS_PAGES);
+#else
+        npages = sysconf(_SC_PHYS_PAGES);
+#endif
 
 	retval = (uint64_t) pagesize * npages;
 #else

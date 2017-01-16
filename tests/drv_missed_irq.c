@@ -109,7 +109,11 @@ static void bind_to_cpu(int cpu)
 {
 	struct sched_param rt = {.sched_priority = 99 };
 
+#ifndef __FreeBSD__
 	igt_assert(sched_setscheduler(getpid(), SCHED_RR | SCHED_RESET_ON_FORK, &rt) == 0);
+#else
+	igt_assert(sched_setscheduler(getpid(), SCHED_RR, &rt) == 0);
+#endif
 }
 
 igt_simple_main

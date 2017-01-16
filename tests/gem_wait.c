@@ -70,7 +70,11 @@ static void basic(int fd, unsigned engine, unsigned flags)
 	igt_spin_t *spin = igt_spin_batch_new(fd, engine, 0);
 	struct drm_i915_gem_wait wait = { spin->handle };
 
+#ifndef __FreeBSD__
 	igt_assert_eq(__gem_wait(fd, &wait), -ETIME);
+#else
+	igt_assert_eq(__gem_wait(fd, &wait), -ETIMEDOUT);
+#endif
 
 	if (flags & BUSY) {
 		struct timespec tv = {};
@@ -82,13 +86,22 @@ static void basic(int fd, unsigned engine, unsigned flags)
 			timeout = 1;
 		}
 
+#ifndef __FreeBSD__
 		while (__gem_wait(fd, &wait) == -ETIME)
 			igt_assert(igt_seconds_elapsed(&tv) < timeout);
+#else
+		while (__gem_wait(fd, &wait) == -ETIMEDOUT)
+			igt_assert(igt_seconds_elapsed(&tv) < timeout);
+#endif
 	} else {
 		igt_spin_batch_set_timeout(spin, NSEC_PER_SEC);
 
 		wait.timeout_ns = NSEC_PER_SEC / 2; /* 0.5s */
+#ifndef __FreeBSD__
 		igt_assert_eq(__gem_wait(fd, &wait), -ETIME);
+#else
+		igt_assert_eq(__gem_wait(fd, &wait), -ETIMEDOUT);
+#endif
 		igt_assert_eq_s64(wait.timeout_ns, 0);
 
 		if ((flags & HANG) == 0) {

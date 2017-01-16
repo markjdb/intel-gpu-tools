@@ -630,7 +630,11 @@ void *__gem_mmap__gtt(int fd, uint32_t handle, uint64_t size, unsigned prot)
 	if (igt_ioctl(fd, DRM_IOCTL_I915_GEM_MMAP_GTT, &mmap_arg))
 		return NULL;
 
+#ifndef __FreeBSD__
 	ptr = mmap64(0, size, prot, MAP_SHARED, fd, mmap_arg.offset);
+#else
+	ptr = mmap(0, size, prot, MAP_SHARED, fd, mmap_arg.offset);
+#endif
 	if (ptr == MAP_FAILED)
 		ptr = NULL;
 	else

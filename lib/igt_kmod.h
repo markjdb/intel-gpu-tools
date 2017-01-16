@@ -24,7 +24,9 @@
 #ifndef IGT_KMOD_H
 #define IGT_KMOD_H
 
+#ifndef __FreeBSD__
 #include <libkmod.h>
+#endif
 
 bool igt_kmod_is_loaded(const char *mod_name);
 void igt_kmod_list_loaded(void);
