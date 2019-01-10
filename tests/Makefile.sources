@@ -128,7 +128,6 @@ TESTS_progs_M = \
 	kms_tv_load_detect \
 	pm_backlight \
 	pm_lpsp \
-	pm_rpm \
 	pm_rps \
 	pm_rc6_residency \
 	pm_sseu \

@@ -45,6 +45,10 @@
 #include "intel_chipset.h"
 #include "igt_stats.h"
 
+#ifndef ETIME
+#define ETIME ETIMEDOUT
+#endif
+
 #define LOCAL_IOCTL_I915_GEM_EXECBUFFER2_WR       DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GEM_EXECBUFFER2, struct drm_i915_gem_execbuffer2)
 
 #define LOCAL_I915_EXEC_NO_RELOC (1<<11)

@@ -47,6 +47,16 @@
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 #endif
 
+
+#ifndef _IOC_TYPE
+#define _IOC_NRBITS  8
+#define _IOC_NRSHIFT 0
+#define _IOC_TYPEMASK        ((1 << _IOC_TYPEBITS)-1)
+#define _IOC_TYPESHIFT   (_IOC_NRSHIFT + _IOC_NRBITS)
+#define _IOC_TYPEBITS	8
+#define _IOC_TYPE(nr)                (((nr) >> _IOC_TYPESHIFT) & _IOC_TYPEMASK)
+#endif
+
 static int close_init_helper(int fd);
 static int ioctl_init_helper(int fd, unsigned long request, ...);
 
@@ -199,7 +209,7 @@ write_header(void)
 		  (0 << AUB_HEADER_MINOR_SHIFT));
 
 	/* Next comes a 32-byte application name. */
-	strncpy(app_name, program_invocation_short_name, sizeof(app_name));
+	strncpy(app_name, getprogname(), sizeof(app_name));
 	app_name[sizeof(app_name) - 1] = 0;
 	data_out(app_name, sizeof(app_name));
 

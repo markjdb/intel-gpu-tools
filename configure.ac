@@ -126,7 +126,7 @@ PKG_CHECK_MODULES(PCIACCESS, [pciaccess >= 0.10])
 #PKG_CHECK_MODULES(PROCPS, [libprocps])
 
 case "$target_cpu" in
-	x86*|i?86)
+	x86*|i?86|amd64)
 		build_x86="yes"
 		;;
 	*)

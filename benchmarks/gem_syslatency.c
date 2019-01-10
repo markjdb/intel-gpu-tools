@@ -43,9 +43,6 @@
 #include <limits.h>
 #include "drm.h"
 
-#include <linux/unistd.h>
-
-#define gettid() syscall(__NR_gettid)
 #define sigev_notify_thread_id _sigev_un._tid
 
 static volatile int done;
@@ -152,7 +149,6 @@ static void *sys_wait(void *arg)
 	sigprocmask(SIG_SETMASK, &mask, NULL);
 
 	sev.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
-	sev.sigev_notify_thread_id = gettid();
 	sev.sigev_signo = SIG;
 	timer_create(CLOCK_MONOTONIC, &sev, &timer);
 

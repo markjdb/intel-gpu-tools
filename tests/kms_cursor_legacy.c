@@ -25,6 +25,11 @@
 #define _GNU_SOURCE
 #include <sched.h>
 #include <sys/poll.h>
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
+#include <sys/cpuset.h>
+#define cpu_set_t cpuset_t
 
 #include "igt.h"
 #include "igt_rand.h"
@@ -94,7 +99,7 @@ static void stress(igt_display_t *display,
 
 		CPU_ZERO(&allowed);
 		CPU_SET(child, &allowed);
-		sched_setaffinity(getpid(), sizeof(cpu_set_t), &allowed);
+		cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(cpuset_t), &allowed);
 
 		hars_petruska_f54_1_random_perturb(child);
 		igt_until_timeout(timeout) {
@@ -116,7 +121,7 @@ static void stress(igt_display_t *display,
 
 			CPU_ZERO(&allowed);
 			CPU_SET(child, &allowed);
-			sched_setaffinity(getpid(), sizeof(cpu_set_t), &allowed);
+			cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(cpuset_t), &allowed);
 			igt_until_timeout(timeout) {
 				count++;
 				cpu_relax();
@@ -680,6 +685,23 @@ get_cursor_updates_per_vblank(igt_display_t *display, enum pipe pipe,
 	return target;
 }
 
+static int sched_getcpu()
+{
+	struct kinfo_proc ki;
+	int mib[] = {
+		CTL_KERN,
+		KERN_PROC,
+		KERN_PROC_PID,
+		getpid(),
+	};
+	u_int miblen = sizeof(mib) / sizeof(mib[0]);
+	size_t size = sizeof(ki);
+	if (sysctl(mib, miblen, &ki, &size, NULL, 0))
+		return 0;
+
+	return ki.ki_oncpu;
+}
+
 static void flip_vs_cursor(igt_display_t *display, enum flip_test mode, int nloops)
 {
 	struct drm_mode_cursor arg[2];
@@ -731,15 +753,15 @@ static void flip_vs_cursor(igt_display_t *display, enum flip_test mode, int nloo
 
 		CPU_ZERO(&mask);
 		CPU_SET(cpu, &mask);
-		sched_getaffinity(0, sizeof(oldmask), &oldmask);
-		sched_setaffinity(0, sizeof(mask), &mask);
+		cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(cpuset_t), &oldmask);
+		cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(cpuset_t), &mask);
 
 		shared[0] = 0;
 
 		igt_fork(child, 1) {
 			struct sched_param parm = { .sched_priority = 0 };
 
-			igt_assert(sched_setscheduler(0, SCHED_IDLE, &parm) == 0);
+			igt_assert(sched_setscheduler(0, SCHED_OTHER, &parm) == 0);
 
 			while (!shared[0])
 				sched_yield();
@@ -783,7 +805,7 @@ static void flip_vs_cursor(igt_display_t *display, enum flip_test mode, int nloo
 		shared[0] = 1;
 		igt_waitchildren();
 		munmap((void *)shared, 4096);
-		sched_setaffinity(0, sizeof(oldmask), &oldmask);
+		cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(cpuset_t), &oldmask);
 	}
 
 	do_cleanup_display(display);
